@@ -33,7 +33,7 @@ func preShortenValidation(c *gin.Context, url internal.URL, logger *zap.SugaredL
 
 	if url.OriginalURL == "" {
 		logger.Errorw("invalid req body", "err", ErrEmptyURLField)
-		c.JSON(http.StatusBadRequest, gin.H{"message": ErrEmptyURLField.Error() + ". Please provide url."})
+		c.JSON(http.StatusBadRequest, gin.H{"message": ErrEmptyURLField.Error() + ". Please provide url"})
 		return ErrEmptyURLField
 	}
 	return nil
@@ -73,14 +73,14 @@ func setupRouter() *gin.Engine {
 				c.JSON(http.StatusBadRequest, gin.H{"message": ErrEmptyReqBody})
 				return
 			} else if errors.Is(err, ErrUnmarshallingReqBody) {
-				c.JSON(http.StatusBadRequest, gin.H{"message": "Please try again."})
+				c.JSON(http.StatusBadRequest, gin.H{"message": "Please try again"})
 				return
 			} else if errors.Is(err, ErrEmptyURLField) {
-				c.JSON(http.StatusBadRequest, gin.H{"message": ErrEmptyURLField.Error() + ". Please provide url."})
+				c.JSON(http.StatusBadRequest, gin.H{"message": ErrEmptyURLField.Error() + ". Please provide url"})
 				return
 			}
-			logger.Errorw("preShortenValidation failed.", "err", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Please try again after some time."})
+			logger.Errorw("preShortenValidation failed", "err", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Please try again after some time"})
 			return
 
 		}
@@ -97,6 +97,8 @@ func setupRouter() *gin.Engine {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Please try again after some time."})
 			return
 		}
+		c.JSON(http.StatusOK, gin.H{"originalURL": url.OriginalURL, "shortURL": url.ShortURL})
+		return
 
 	})
 

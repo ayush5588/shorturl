@@ -39,7 +39,7 @@ require (
 
 require (
 	github.com/gin-gonic/gin v1.9.1
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.3.1 // indirect
 	github.com/lithammer/shortuuid v3.0.0+incompatible
 	go.uber.org/multierr v1.10.0 // indirect
 )

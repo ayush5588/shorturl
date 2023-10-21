@@ -80,11 +80,7 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	}
 
 	// This is a first time shortening request for the url
-	uid, err := algo.Hashing(origURL)
-	if err != nil {
-		logger.Errorf("error in getting uid from hashing of originalURL: %s", origURL)
-		return err
-	}
+	uid := algo.UniqueID(origURL)
 
 	urlMap := URLInfo{
 		OriginalURL: origURL,

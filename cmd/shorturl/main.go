@@ -19,13 +19,13 @@ var (
 	ErrUnmarshallingReqBody = errors.New("error in unmarshalling the request body")
 )
 
-func preShortenValidation(c *gin.Context, url internal.URL, logger *zap.SugaredLogger) error {
+func preShortenValidation(c *gin.Context, url *internal.URL, logger *zap.SugaredLogger) error {
 	if reflect.DeepEqual(url, internal.URL{}) {
 		logger.Error(ErrEmptyReqBody)
 		return ErrEmptyReqBody
 	}
 
-	err := c.BindJSON(&url)
+	err := c.BindJSON(url)
 	if err != nil {
 		logger.Errorw(ErrUnmarshallingReqBody.Error(), "err", err)
 		return ErrUnmarshallingReqBody
@@ -67,10 +67,10 @@ func setupRouter() *gin.Engine {
 	router.PUT("/short", func(c *gin.Context) {
 		var url internal.URL
 
-		err := preShortenValidation(c, url, logger)
+		err := preShortenValidation(c, &url, logger)
 		if err != nil {
 			if errors.Is(err, ErrEmptyReqBody) {
-				c.JSON(http.StatusBadRequest, gin.H{"message": ErrEmptyReqBody})
+				c.JSON(http.StatusBadRequest, gin.H{"message": ErrEmptyReqBody.Error()})
 				return
 			} else if errors.Is(err, ErrUnmarshallingReqBody) {
 				c.JSON(http.StatusBadRequest, gin.H{"message": "Please try again"})

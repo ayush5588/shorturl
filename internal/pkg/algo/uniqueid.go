@@ -6,6 +6,7 @@ import (
 
 // UniqueID ...
 func UniqueID(val string) string {
+	// URL safe uid
 	uid := shortuuid.NewWithNamespace(val)
 	return uid
 }

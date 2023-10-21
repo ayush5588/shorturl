@@ -1,0 +1,5 @@
+package shorturl
+
+func main() {
+
+}

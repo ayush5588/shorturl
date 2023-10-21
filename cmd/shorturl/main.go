@@ -13,7 +13,7 @@ func setupRouter() *gin.Engine {
 	router := gin.Default()
 
 	router.GET("/healthz", func(c *gin.Context) {
-		defer logger.Infof("Successfully served GET /healthz request")
+		logger.Infof("Successfully served GET /healthz request")
 		c.JSON(http.StatusOK, gin.H{"message": "Server is healthy"})
 	})
 

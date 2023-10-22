@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>
+		URLShortener
+	</title>
+</head>
+
+<body>
+	<form method="post" action="http://localhost:8080/short">
+ 
+        <p>
+            <label>LongURL: </label>
+			<input type="text" name="originalURL" id="originalURL" placeholder="Enter long URL here" />
+			<h4>{{.longURLOutput}}</h4>
+ 
+        <p>
+            <label>Alias: </label>
+			<input type="text" name="alias" id="alias" placeholder="Enter alias" />
+        </p>
+ 
+        <p>
+            <button type="submit">Submit</button>
+        </p>
+ 
+    </form>
+
+	<h3>{{.output}}</h3>
+</body>
+
+</html>

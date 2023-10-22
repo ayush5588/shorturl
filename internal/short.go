@@ -19,7 +19,7 @@ type Database struct {
 // URL ...
 type URL struct {
 	OriginalURL string `json:"originalURL"`
-	ShortURL    string `json:"shortURL"`
+	UID         string `json:"uid"`
 	Alias       string `json:"alias"`
 	Database
 }
@@ -33,10 +33,13 @@ type URLInfo struct {
 var (
 	// ErrNotSupportedMethod ...
 	ErrNotSupportedMethod = errors.New("not supported method")
+	// ErrOriginalURLDoesNotExist ...
+	ErrOriginalURLDoesNotExist = errors.New("original url for the given short url does not exist")
 )
 
 var (
-	domain         = "http://localhost:8080/"
+	// Domain ...
+	Domain         = "http://localhost:8080/"
 	origToShortKey = "original:to:short"
 	shortToOrigKey = "short:to:original"
 )
@@ -53,8 +56,8 @@ func (u *URL) URLHandler(c *gin.Context, logger *zap.SugaredLogger) error {
 	case "GET", "":
 		// Handle URL redirect request
 		logger.Info("Inside GET of URLHandler")
-		return nil
-	case "PUT":
+		return u.redirectToOriginalURL(logger)
+	case "POST":
 		// Handle ShortURL generate request
 		logger.Info("Inside PUT of URLHandler", u.OriginalURL)
 		return u.shortenURLHandler(logger)
@@ -63,19 +66,45 @@ func (u *URL) URLHandler(c *gin.Context, logger *zap.SugaredLogger) error {
 	}
 }
 
+func (u *URL) redirectToOriginalURL(logger *zap.SugaredLogger) error {
+	uid := u.UID
+
+	// Check for the original URL in redis shortToOrigKey
+	val, err := u.client.HGet(shortToOrigKey, uid).Result()
+	if err != nil && err != redis.Nil {
+		logger.Error("error in getting the value from db for %s field in %s key ", uid, shortToOrigKey)
+		return err
+	}
+
+	// Original URL exist for the given short URL
+	if val != "" {
+		var urlInfo URLInfo
+		err := json.Unmarshal([]byte(val), &urlInfo)
+		if err != nil {
+			return err
+		}
+		logger.Infof("original URL for uid: %s is %s", uid, urlInfo.OriginalURL)
+		u.OriginalURL = urlInfo.OriginalURL
+		return nil
+	}
+
+	return ErrOriginalURLDoesNotExist
+
+}
+
 func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	origURL := u.OriginalURL
 
 	// Check in db if there exist an entry for the given originalURL
 	val, err := u.client.HGet(origToShortKey, origURL).Result()
 	if err != nil && err != redis.Nil {
-		logger.Errorf("error in getting the value from db for %s key & %s field", origToShortKey, origURL)
+		logger.Errorf("error in getting the value from db for %s field in %s key ", origURL, origToShortKey)
 		return err
 	}
 
 	if val != "" {
 		logger.Infof("value exist for originalURL: %s", origURL)
-		u.ShortURL = domain + val
+		u.UID = val
 		return nil
 	}
 
@@ -105,7 +134,7 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 		return err
 	}
 
-	u.ShortURL = domain + uid
+	u.UID = uid
 
 	logger.Info("Success URLHandler operation")
 

@@ -3,34 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="/templates/styles.css">
     <title>URL Shortener</title>
 </head>
 <body>
-    <section class="form-content">
-        <div class="form-content">
-            <h1>Shorten Your Long URLs</h1>
+	<header>
+        <nav>
+            <div class="logo">URL Shortener</div>
+            <ul>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <section class="hero-content">
+        <div class="hero-content">
             <form method="post" action="http://localhost:8080/short">
- 
-				<p>
-					<label>LongURL: </label>
-					<input type="url" name="originalURL" id="originalURL" placeholder="Enter long URL here" />
-					<h4>{{.longURLOutput}}</h4>
- 
-				<p>
+					<div class="originalURL">
+						<label>LongURL: </label>
+						<input type="url" name="originalURL" id="originalURL" placeholder="Enter long URL here" />
+					</div>
+						
+
 					<label>Alias: </label>
 					<input type="text" name="alias" id="alias" placeholder="Enter alias" />
-				</p>
  
-				<p>
 					<button type="submit">Submit</button>
-				</p>
+					<h4>{{.longURLOutput}}</h4>
  
 			</form>
-			
-			<h3>{{.output}}</h3>
+			<div class="shortened-url">
+                Shortened URL: <a href="{{.output}}" id="output-url" target="_blank">{{.output}}</a>
+				<button type="button" id="copy-button" onclick="copyToClipboard">Copy</button>
+            </div>
 			
         </div>
     </section>
 
 </body>
+
+<script>
+	// Function to copy the shortened URL to the clipboard
+	function copyToClipboard() {
+		var outputUrl = document.getElementById("output-url");
+		var copyButton = document.getElementById("copy-button");
+
+		var textArea = document.createElement("textarea");
+		textArea.value = outputUrl.textContent;
+		document.body.appendChild(textArea);
+
+		textArea.select();
+		document.execCommand('copy');
+		document.body.removeChild(textArea);
+
+		copyButton.textContent = "Copied!";
+	}
+
+	var copyButton = document.getElementById("copy-button");
+	copyButton.addEventListener("click", copyToClipboard);
+</script>
 </html>

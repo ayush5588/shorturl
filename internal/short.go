@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"os"
 
 	"github.com/ayush5588/shorturl/db"
 	"github.com/ayush5588/shorturl/internal/pkg/algo"
@@ -21,6 +22,7 @@ type URL struct {
 	OriginalURL string `json:"originalURL"`
 	UID         string `json:"uid"`
 	Alias       string `json:"alias"`
+	URLExist    bool   `json:"urlExist"`
 	Database
 }
 
@@ -41,7 +43,7 @@ var (
 
 var (
 	// Domain ...
-	Domain         = "http://localhost:8080/"
+	Domain         = os.Getenv("DOMAIN_NAME")
 	origToShortKey = "original:to:short"
 	shortToOrigKey = "short:to:original"
 )
@@ -121,6 +123,7 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	// Shortened URL already exist for the user given original URL
 	if val != "" {
 		logger.Infof("value exist for originalURL: %s", origURL)
+		u.URLExist = true
 		u.UID = val
 		return nil
 	}

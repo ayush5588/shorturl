@@ -2,6 +2,7 @@ package internal
 
 import (
 	"net/url"
+	"strings"
 	"time"
 
 	"go.uber.org/zap"
@@ -36,4 +37,26 @@ func IsValidURL(logger *zap.SugaredLogger, rawURL string) bool {
 	}
 	return (err == nil || u.Scheme == "" || u.Host == "")
 
+}
+
+// IsValidAlias ...
+func IsValidAlias(logger *zap.SugaredLogger, alias string) bool {
+	if alias == "" {
+		return true
+	}
+
+	if len(alias) > 15 {
+		return false
+	}
+
+	notAllowed := "!@#$%^&*()+={}[]|`/?.>,<:;'"
+
+	for _, ch := range alias {
+		if strings.ContainsRune(notAllowed, ch) {
+			logger.Errorf("invalid alias. Contains %c special character", ch)
+			return false
+		}
+	}
+
+	return true
 }

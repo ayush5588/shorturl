@@ -18,6 +18,8 @@ var (
 	ErrEmptyURLField = errors.New("URL field cannot be empty")
 	// ErrInvalidURL ...
 	ErrInvalidURL = errors.New("invalid url")
+	// ErrInvalidAlias ...
+	ErrInvalidAlias = errors.New("invalid alias")
 )
 
 var (
@@ -39,6 +41,10 @@ func preShortenValidation(c *gin.Context, url *internal.URL, logger *zap.Sugared
 
 	}
 
+	if !internal.IsValidAlias(logger, url.Alias) {
+		return ErrInvalidAlias
+	}
+
 	return nil
 }
 
@@ -47,6 +53,7 @@ func setupRouter() *gin.Engine {
 
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*")
+	router.Static("/templates", "./templates/")
 
 	/*
 		Method: GET
@@ -88,9 +95,12 @@ func setupRouter() *gin.Engine {
 			} else if errors.Is(err, ErrInvalidURL) {
 				c.HTML(http.StatusBadRequest, "index.html", gin.H{"longURLOutput": ErrInvalidURL.Error()})
 				return
+			} else if errors.Is(err, ErrInvalidAlias) {
+				c.HTML(http.StatusBadRequest, "index.html", gin.H{"longURLOutput": ErrInvalidAlias.Error()})
+				return
 			}
 			logger.Errorw("preShortenValidation failed", "err", err)
-			c.HTML(http.StatusInternalServerError, "index.html", gin.H{"output": "Please try again after some time"})
+			c.HTML(http.StatusInternalServerError, "index.html", gin.H{"longURLOutput": "Please try again after some time"})
 			return
 
 		}
@@ -104,14 +114,18 @@ func setupRouter() *gin.Engine {
 				return
 			} else if errors.Is(err, internal.ErrAliasExist) {
 				logger.Error(internal.ErrAliasExist)
-				c.HTML(http.StatusBadRequest, "index.html", gin.H{"output": internal.ErrAliasExist.Error()})
+				c.HTML(http.StatusBadRequest, "index.html", gin.H{"longURLOutput": internal.ErrAliasExist.Error()})
 				return
 			}
 			logger.Errorw("URLHandler operation failed.", "err", err)
-			c.HTML(http.StatusInternalServerError, "index.html", gin.H{"output": "Please try again after some time"})
+			c.HTML(http.StatusInternalServerError, "index.html", gin.H{"longURLOutput": "Please try again after some time"})
 			return
 		}
-		c.HTML(http.StatusOK, "index.html", gin.H{"output": internal.Domain + url.UID})
+		var urlExistMessage string
+		if url.URLExist {
+			urlExistMessage = "Shortened URL of the given URL already exists"
+		}
+		c.HTML(http.StatusOK, "index.html", gin.H{"longURLOutput": urlExistMessage, "output": internal.Domain + url.UID})
 		return
 
 	})

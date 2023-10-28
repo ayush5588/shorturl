@@ -21,6 +21,7 @@ type URL struct {
 	OriginalURL string `json:"originalURL"`
 	UID         string `json:"uid"`
 	Alias       string `json:"alias"`
+	URLExist    bool   `json:"urlExist"`
 	Database
 }
 
@@ -121,6 +122,7 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	// Shortened URL already exist for the user given original URL
 	if val != "" {
 		logger.Infof("value exist for originalURL: %s", origURL)
+		u.URLExist = true
 		u.UID = val
 		return nil
 	}

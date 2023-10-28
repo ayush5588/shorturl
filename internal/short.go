@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"os"
 
 	"github.com/ayush5588/shorturl/db"
 	"github.com/ayush5588/shorturl/internal/pkg/algo"
@@ -42,7 +43,7 @@ var (
 
 var (
 	// Domain ...
-	Domain         = "http://localhost:8080/"
+	Domain         = os.Getenv("DOMAIN_NAME")
 	origToShortKey = "original:to:short"
 	shortToOrigKey = "short:to:original"
 )

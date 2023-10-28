@@ -46,6 +46,7 @@ func setupRouter() *gin.Engine {
 	logger := internal.GetLogger()
 
 	router := gin.Default()
+	router.LoadHTMLGlob("templates/*")
 
 	/*
 		Method: GET
@@ -63,7 +64,7 @@ func setupRouter() *gin.Engine {
 		Path: /
 		Definition: Serves the home page
 	*/
-	router.LoadHTMLGlob("templates/*")
+
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
@@ -94,12 +95,16 @@ func setupRouter() *gin.Engine {
 
 		}
 
-		// URLHandler handles the url shortening operation
+		// URLHandler handles the url shortening GET (i.e. redirect) & POST (i.e. shortening) operation
 		err = url.URLHandler(c, logger)
 		if err != nil {
 			if errors.Is(err, internal.ErrNotSupportedMethod) {
 				logger.Error(internal.ErrNotSupportedMethod)
 				c.JSON(http.StatusBadRequest, gin.H{"message": internal.ErrNotSupportedMethod.Error()})
+				return
+			} else if errors.Is(err, internal.ErrAliasExist) {
+				logger.Error(internal.ErrAliasExist)
+				c.HTML(http.StatusBadRequest, "index.html", gin.H{"output": internal.ErrAliasExist.Error()})
 				return
 			}
 			logger.Errorw("URLHandler operation failed.", "err", err)

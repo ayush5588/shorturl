@@ -1,32 +1,36 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-	<title>
-		URLShortener
-	</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
 </head>
-
 <body>
-	<form method="post" action="http://localhost:8080/short">
+    <section class="form-content">
+        <div class="form-content">
+            <h1>Shorten Your Long URLs</h1>
+            <form method="post" action="http://localhost:8080/short">
  
-        <p>
-            <label>LongURL: </label>
-			<input type="text" name="originalURL" id="originalURL" placeholder="Enter long URL here" />
-			<h4>{{.longURLOutput}}</h4>
+				<p>
+					<label>LongURL: </label>
+					<input type="url" name="originalURL" id="originalURL" placeholder="Enter long URL here" />
+					<h4>{{.longURLOutput}}</h4>
  
-        <p>
-            <label>Alias: </label>
-			<input type="text" name="alias" id="alias" placeholder="Enter alias" />
-        </p>
+				<p>
+					<label>Alias: </label>
+					<input type="text" name="alias" id="alias" placeholder="Enter alias" />
+				</p>
  
-        <p>
-            <button type="submit">Submit</button>
-        </p>
+				<p>
+					<button type="submit">Submit</button>
+				</p>
  
-    </form>
+			</form>
+			
+			<h3>{{.output}}</h3>
+			
+        </div>
+    </section>
 
-	<h3>{{.output}}</h3>
 </body>
-
 </html>

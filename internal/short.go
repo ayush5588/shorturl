@@ -35,6 +35,8 @@ var (
 	ErrNotSupportedMethod = errors.New("not supported method")
 	// ErrOriginalURLDoesNotExist ...
 	ErrOriginalURLDoesNotExist = errors.New("original url for the given short url does not exist")
+	// ErrAliasExist ...
+	ErrAliasExist = errors.New("given alias already exist")
 )
 
 var (
@@ -92,6 +94,20 @@ func (u *URL) redirectToOriginalURL(logger *zap.SugaredLogger) error {
 
 }
 
+// checkAliasExist ...
+func (u *URL) checkAliasExist(alias string) (bool, error) {
+	var exist bool
+	valExist, err := u.client.HGet(shortToOrigKey, alias).Result()
+	if err != nil && err != redis.Nil {
+		return exist, err
+	}
+	if valExist != "" {
+		exist = true
+	}
+
+	return exist, nil
+}
+
 func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	origURL := u.OriginalURL
 
@@ -102,6 +118,7 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 		return err
 	}
 
+	// Shortened URL already exist for the user given original URL
 	if val != "" {
 		logger.Infof("value exist for originalURL: %s", origURL)
 		u.UID = val
@@ -109,7 +126,25 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	}
 
 	// This is a first time shortening request for the url
-	uid := algo.UniqueID(origURL)
+	var uid string
+
+	if u.Alias != "" {
+		uid = u.Alias
+		// check if the given alias is unique
+		aliasExist, err := u.checkAliasExist(uid)
+		if err != nil && err != redis.Nil {
+			logger.Errorf("error in getting the alias value from db for %s field in %s key ", uid, shortToOrigKey)
+			return err
+		}
+		// Given alias exist
+		if aliasExist {
+			logger.Errorf("given alias %s exist", uid)
+			return ErrAliasExist
+		}
+	} else {
+		// Generate a unique id for the given original URL as user has not given any alias
+		uid = algo.UniqueID(origURL)
+	}
 
 	urlMap := URLInfo{
 		OriginalURL: origURL,
@@ -122,12 +157,14 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 		return err
 	}
 
+	// Store mapping between unique id (either valid alias or generated id) AND original URL, alias(if given)
 	_, err = u.client.HSet(shortToOrigKey, uid, urlMapbytes).Result()
 	if err != nil {
 		logger.Errorf("error in entering urlMap: %+v for uid: %s", urlMap, uid)
 		return err
 	}
 
+	// Store Original URL mapping with the unique id
 	_, err = u.client.HSet(origToShortKey, origURL, uid).Result()
 	if err != nil {
 		logger.Errorf("error in entering mapping between originalURL: %s & uid: %s", origURL, uid)

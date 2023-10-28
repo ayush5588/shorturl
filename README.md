@@ -5,13 +5,12 @@ ShortURL is a handy tool for transforming long and unwieldy web addresses into c
 It uses Redis as the database.
 
 ## Installation
-### Using docker-compose
+Using docker-compose
 ```
 docker-compose up
 ```
-#### OR 
-
-#### You can directly do:
+#### OR
+You can directly do:
 
 ```
 go run main.go

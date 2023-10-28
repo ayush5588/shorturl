@@ -18,9 +18,24 @@ var (
 	rPort = os.Getenv("REDIS_PORT")
 )
 
+func getRedisAddr() string {
+	// If rHost or rPort are not set like when directly running in local system and not through docker
+	if rHost == "" {
+		rHost = "localhost"
+	}
+	if rPort == "" {
+		rPort = "6379"
+	}
+
+	redisAddr := fmt.Sprintf("%s:%s", rHost, rPort)
+
+	return redisAddr
+}
+
 // NewRedisConnection ...
 func NewRedisConnection() (*redis.Client, error) {
-	redisAddr := fmt.Sprintf("%s:%s", rHost, rPort)
+	redisAddr := getRedisAddr()
+
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisAddr,
 		Password: "",

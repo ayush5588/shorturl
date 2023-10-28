@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="stylesheet" href="/templates/styles.css">
-    <title>URL Shortener</title>
+    <title>ShortURL</title>
 </head>
 <body>
 	<header>
         <nav>
-            <div class="logo">URL Shortener</div>
+            <div class="logo">ShortURL</div>
             <ul>
-                <li><a href="#">About</a></li>
-                <li><a href="#">Contact</a></li>
+                <li><a href="https://github.com/ayush5588/shorturl/tree/main" target="_blank">About</a></li>
+                <li><a href="https://github.com/ayush5588" target="_blank">Contact</a></li>
             </ul>
         </nav>
     </header>
@@ -21,14 +21,14 @@
             <form method="post" action="http://localhost:8080/short">
 					<div class="originalURL">
 						<label>LongURL: </label>
-						<input type="url" name="originalURL" id="originalURL" placeholder="Enter long URL here" />
+						<input type="url" name="originalURL" id="originalURL" placeholder="Enter long URL here..." />
 					</div>
-						
 
 					<label>Alias: </label>
 					<input type="text" name="alias" id="alias" placeholder="Enter alias" />
  
 					<button type="submit">Submit</button>
+					
 					<h4>{{.longURLOutput}}</h4>
  
 			</form>

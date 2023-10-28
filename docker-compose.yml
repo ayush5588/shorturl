@@ -10,7 +10,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - .:/mnt/e/Tech/Dev/go-workspace/src/github.com/ayush5588/shorturl  # Mount the current directory
+      - .:/shorturl  # Mount the current directory
     depends_on:
       - redis
     environment:

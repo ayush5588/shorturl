@@ -2,11 +2,8 @@ version: "3"
 
 services:
   server:
-    image: golang:1.20-alpine 
+    image: ayush5588/shorturl:0.0.4 
     container_name: shorturl-server
-    build:
-      context: .
-      dockerfile: Dockerfile
     ports:
       - "8080:8080"
     volumes:
@@ -18,7 +15,7 @@ services:
       REDIS_PORT: 6379
 
   redis:
-    image: redis:latest  # Official Redis image
+    image: redis:alpine
     container_name: shorturl-redis
     ports:
       - "6379:6379"

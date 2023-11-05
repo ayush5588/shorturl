@@ -9,7 +9,7 @@ Using docker-compose
 ```
 docker-compose up
 ```
-#### OR
+OR<br><br>
 You can directly do:
 
 ```

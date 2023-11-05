@@ -77,7 +77,7 @@ func setupRouter() *gin.Engine {
 	})
 
 	/*
-		Method: PUT
+		Method: POST
 		Path: /short
 		Body: {
 			OriginalURL string (Required)
@@ -86,7 +86,7 @@ func setupRouter() *gin.Engine {
 		Definition: Returns a shortened URL for the given URL
 	*/
 	router.POST("/short", func(c *gin.Context) {
-		var url internal.URL		
+		var url internal.URL
 		err := preShortenValidation(c, &url, logger)
 		if err != nil {
 			if errors.Is(err, ErrEmptyURLField) {

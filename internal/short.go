@@ -63,7 +63,7 @@ func (u *URL) URLHandler(c *gin.Context, logger *zap.SugaredLogger) error {
 		return u.redirectToOriginalURL(logger)
 	case "POST":
 		// Handle ShortURL generate request
-		logger.Info("Inside PUT of URLHandler", u.OriginalURL)
+		logger.Info("Inside POST of URLHandler", u.OriginalURL)
 		return u.shortenURLHandler(logger)
 	default:
 		return ErrNotSupportedMethod

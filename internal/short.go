@@ -3,9 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
-	"os"
 
-	"github.com/ayush5588/shorturl/db"
 	"github.com/ayush5588/shorturl/internal/pkg/algo"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
@@ -14,7 +12,7 @@ import (
 
 // Database ...
 type Database struct {
-	client *redis.Client
+	Client *redis.Client
 }
 
 // URL ...
@@ -42,22 +40,15 @@ var (
 )
 
 var (
-	// Domain ...
-	Domain         = os.Getenv("DOMAIN_NAME")
 	origToShortKey = "original:to:short"
 	shortToOrigKey = "short:to:original"
 )
 
 // URLHandler ...
 func (u *URL) URLHandler(c *gin.Context, logger *zap.SugaredLogger) error {
-	redisClient, err := db.NewRedisConnection()
-	if err != nil {
-		return err
-	}
-	u.client = redisClient
 
 	switch c.Request.Method {
-	case "GET", "":
+	case "GET":
 		// Handle URL redirect request
 		logger.Info("Inside GET of URLHandler")
 		return u.redirectToOriginalURL(logger)
@@ -74,7 +65,7 @@ func (u *URL) redirectToOriginalURL(logger *zap.SugaredLogger) error {
 	uid := u.UID
 
 	// Check for the original URL in redis shortToOrigKey
-	val, err := u.client.HGet(shortToOrigKey, uid).Result()
+	val, err := u.Client.HGet(shortToOrigKey, uid).Result()
 	if err != nil && err != redis.Nil {
 		logger.Error("error in getting the value from db for %s field in %s key ", uid, shortToOrigKey)
 		return err
@@ -99,7 +90,7 @@ func (u *URL) redirectToOriginalURL(logger *zap.SugaredLogger) error {
 // checkAliasExist ...
 func (u *URL) checkAliasExist(alias string) (bool, error) {
 	var exist bool
-	valExist, err := u.client.HGet(shortToOrigKey, alias).Result()
+	valExist, err := u.Client.HGet(shortToOrigKey, alias).Result()
 	if err != nil && err != redis.Nil {
 		return exist, err
 	}
@@ -114,7 +105,7 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	origURL := u.OriginalURL
 
 	// Check in db if there exist an entry for the given originalURL
-	val, err := u.client.HGet(origToShortKey, origURL).Result()
+	val, err := u.Client.HGet(origToShortKey, origURL).Result()
 	if err != nil && err != redis.Nil {
 		logger.Errorf("error in getting the value from db for %s field in %s key ", origURL, origToShortKey)
 		return err
@@ -161,14 +152,14 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	}
 
 	// Store mapping between unique id (either valid alias or generated id) AND original URL, alias(if given)
-	_, err = u.client.HSet(shortToOrigKey, uid, urlMapbytes).Result()
+	_, err = u.Client.HSet(shortToOrigKey, uid, urlMapbytes).Result()
 	if err != nil {
 		logger.Errorf("error in entering urlMap: %+v for uid: %s", urlMap, uid)
 		return err
 	}
 
 	// Store Original URL mapping with the unique id
-	_, err = u.client.HSet(origToShortKey, origURL, uid).Result()
+	_, err = u.Client.HSet(origToShortKey, origURL, uid).Result()
 	if err != nil {
 		logger.Errorf("error in entering mapping between originalURL: %s & uid: %s", origURL, uid)
 		return err

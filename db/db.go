@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/go-redis/redis"
+	"go.uber.org/zap"
 )
 
 var (
@@ -33,7 +34,7 @@ func getRedisAddr() string {
 }
 
 // NewRedisConnection ...
-func NewRedisConnection() (*redis.Client, error) {
+func NewRedisConnection(logger *zap.SugaredLogger) (*redis.Client, error) {
 	redisAddr := getRedisAddr()
 
 	client := redis.NewClient(&redis.Options{
@@ -44,6 +45,7 @@ func NewRedisConnection() (*redis.Client, error) {
 
 	_, err := client.Ping().Result()
 	if err != nil {
+		logger.Error("error in connecting to redis db - ", err)
 		return nil, ErrRedisNotConnected
 	}
 

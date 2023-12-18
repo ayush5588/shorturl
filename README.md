@@ -13,5 +13,6 @@ OR<br><br>
 You can directly do:
 
 ```
+docker run -p 6379:6379 -d redis:alpine
 go run main.go
 ```

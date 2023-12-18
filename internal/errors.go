@@ -17,32 +17,54 @@ var (
 	ErrInvalidURL = errors.New("invalid url")
 	// ErrInvalidAlias ...
 	ErrInvalidAlias = errors.New("invalid alias")
+	// ErrNotSupportedMethod ...
+	ErrNotSupportedMethod = errors.New("not supported method")
+	// ErrOriginalURLDoesNotExist ...
+	ErrOriginalURLDoesNotExist = errors.New("original url for the given short url does not exist")
+	// ErrAliasExist ...
+	ErrAliasExist = errors.New("given alias already exist")
 )
 
 // HandleError ...
 func HandleError(c *gin.Context, err error, errorKey string, logger *zap.SugaredLogger) {
-	if errors.Is(err, ErrEmptyURLField) {
+
+	switch {
+
+	case errors.Is(err, ErrEmptyURLField):
+		logger.Error(ErrEmptyURLField)
 		c.HTML(http.StatusBadRequest, "index.html", gin.H{"longURLOutput": ErrEmptyURLField.Error()})
-		return
-	} else if errors.Is(err, ErrInvalidURL) {
+		break
+
+	case errors.Is(err, ErrInvalidURL):
+		logger.Error(ErrInvalidURL)
 		c.HTML(http.StatusBadRequest, "index.html", gin.H{"longURLOutput": ErrInvalidURL.Error()})
-		return
-	} else if errors.Is(err, ErrInvalidAlias) {
+		break
+
+	case errors.Is(err, ErrInvalidAlias):
+		logger.Error(ErrInvalidAlias)
 		c.HTML(http.StatusBadRequest, "index.html", gin.H{"longURLOutput": ErrInvalidAlias.Error()})
-		return
-	} else if errors.Is(err, ErrNotSupportedMethod) {
+		break
+
+	case errors.Is(err, ErrNotSupportedMethod):
 		logger.Error(ErrNotSupportedMethod)
 		c.JSON(http.StatusBadRequest, gin.H{"message": ErrNotSupportedMethod.Error()})
-		return
-	} else if errors.Is(err, ErrAliasExist) {
+		break
+
+	case errors.Is(err, ErrAliasExist):
 		logger.Error(ErrAliasExist)
 		c.HTML(http.StatusBadRequest, "index.html", gin.H{"longURLOutput": ErrAliasExist.Error()})
-		return
-	} else if errors.Is(err, ErrOriginalURLDoesNotExist) {
+		break
+
+	case errors.Is(err, ErrOriginalURLDoesNotExist):
+		logger.Error(ErrOriginalURLDoesNotExist)
 		c.JSON(http.StatusNotFound, gin.H{"message": ErrOriginalURLDoesNotExist.Error()})
-		return
+		break
+
+	default:
+		logger.Errorf("%s failed with error: %s", errorKey, err.Error())
+		c.HTML(http.StatusInternalServerError, "index.html", gin.H{"longURLOutput": "Please try again after some time"})
+		break
 	}
-	logger.Errorf("%s failed with error: %s", errorKey, err.Error())
-	c.HTML(http.StatusInternalServerError, "index.html", gin.H{"longURLOutput": "Please try again after some time"})
+
 	return
 }

@@ -2,9 +2,10 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 
+	"github.com/ayush5588/shorturl/internal"
 	"github.com/ayush5588/shorturl/internal/pkg/algo"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis"
 	"go.uber.org/zap"
@@ -31,15 +32,6 @@ type URLInfo struct {
 }
 
 var (
-	// ErrNotSupportedMethod ...
-	ErrNotSupportedMethod = errors.New("not supported method")
-	// ErrOriginalURLDoesNotExist ...
-	ErrOriginalURLDoesNotExist = errors.New("original url for the given short url does not exist")
-	// ErrAliasExist ...
-	ErrAliasExist = errors.New("given alias already exist")
-)
-
-var (
 	origToShortKey = "original:to:short"
 	shortToOrigKey = "short:to:original"
 )
@@ -57,16 +49,48 @@ func (u *URL) URLHandler(c *gin.Context, logger *zap.SugaredLogger) error {
 		logger.Info("Inside POST of URLHandler", u.OriginalURL)
 		return u.shortenURLHandler(logger)
 	default:
-		return ErrNotSupportedMethod
+		return internal.ErrNotSupportedMethod
 	}
+}
+
+// checkAliasExist checks if there already exist an alias provided by the user
+func (u *URL) checkAliasExist(alias string) (bool, error) {
+	var exist bool
+	valExist, err := u.getFromDB(shortToOrigKey, alias)
+	if err != nil {
+		return exist, err
+	}
+	if valExist != "" {
+		exist = true
+	}
+
+	return exist, nil
+}
+
+func (u *URL) pushToDB(key, field string, value interface{}) error {
+	_, err := u.Client.HSet(key, field, value).Result()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u *URL) getFromDB(key, field string) (string, error) {
+	val, err := u.Client.HGet(key, field).Result()
+	if err != nil && err != redis.Nil {
+		return "", err
+	}
+
+	return val, nil
 }
 
 func (u *URL) redirectToOriginalURL(logger *zap.SugaredLogger) error {
 	uid := u.UID
 
 	// Check for the original URL in redis shortToOrigKey
-	val, err := u.Client.HGet(shortToOrigKey, uid).Result()
-	if err != nil && err != redis.Nil {
+	val, err := u.getFromDB(shortToOrigKey, uid)
+	if err != nil {
 		logger.Error("error in getting the value from db for %s field in %s key ", uid, shortToOrigKey)
 		return err
 	}
@@ -83,30 +107,16 @@ func (u *URL) redirectToOriginalURL(logger *zap.SugaredLogger) error {
 		return nil
 	}
 
-	return ErrOriginalURLDoesNotExist
+	return internal.ErrOriginalURLDoesNotExist
 
-}
-
-// checkAliasExist ...
-func (u *URL) checkAliasExist(alias string) (bool, error) {
-	var exist bool
-	valExist, err := u.Client.HGet(shortToOrigKey, alias).Result()
-	if err != nil && err != redis.Nil {
-		return exist, err
-	}
-	if valExist != "" {
-		exist = true
-	}
-
-	return exist, nil
 }
 
 func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	origURL := u.OriginalURL
 
 	// Check in db if there exist an entry for the given originalURL
-	val, err := u.Client.HGet(origToShortKey, origURL).Result()
-	if err != nil && err != redis.Nil {
+	val, err := u.getFromDB(origToShortKey, origURL)
+	if err != nil {
 		logger.Errorf("error in getting the value from db for %s field in %s key ", origURL, origToShortKey)
 		return err
 	}
@@ -131,9 +141,10 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 			return err
 		}
 		// Given alias exist
+		// Return error as alias has to be unique
 		if aliasExist {
 			logger.Errorf("given alias %s exist", uid)
-			return ErrAliasExist
+			return internal.ErrAliasExist
 		}
 	} else {
 		// Generate a unique id for the given original URL as user has not given any alias
@@ -152,14 +163,14 @@ func (u *URL) shortenURLHandler(logger *zap.SugaredLogger) error {
 	}
 
 	// Store mapping between unique id (either valid alias or generated id) AND original URL, alias(if given)
-	_, err = u.Client.HSet(shortToOrigKey, uid, urlMapbytes).Result()
+	err = u.pushToDB(shortToOrigKey, uid, urlMapbytes)
 	if err != nil {
 		logger.Errorf("error in entering urlMap: %+v for uid: %s", urlMap, uid)
 		return err
 	}
 
 	// Store Original URL mapping with the unique id
-	_, err = u.Client.HSet(origToShortKey, origURL, uid).Result()
+	err = u.pushToDB(origToShortKey, origURL, uid)
 	if err != nil {
 		logger.Errorf("error in entering mapping between originalURL: %s & uid: %s", origURL, uid)
 		return err

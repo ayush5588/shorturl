@@ -55,6 +55,7 @@ func SetupRouter() *gin.Engine {
 	router.LoadHTMLGlob("templates/*")
 	router.Static("/templates", "./templates/")
 
+	
 	/*
 		Method: GET
 		Path: /healthz
@@ -66,16 +67,17 @@ func SetupRouter() *gin.Engine {
 		return
 	})
 
+	
 	/*
 		Method: GET
 		Path: /
 		Definition: Serves the home page
 	*/
-
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(http.StatusOK, "index.html", nil)
 	})
 
+	
 	/*
 		Method: POST
 		Path: /short
@@ -114,6 +116,7 @@ func SetupRouter() *gin.Engine {
 
 	})
 
+	
 	/*
 		Method: GET
 		Path: /:id

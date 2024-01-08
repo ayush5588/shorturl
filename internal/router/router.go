@@ -133,7 +133,7 @@ func SetupRouter() *gin.Engine {
 			return
 		}
 
-		c.Redirect(http.StatusTemporaryRedirect, url.OriginalURL)
+		c.Redirect(http.StatusFound, url.OriginalURL)
 		return
 	})
 

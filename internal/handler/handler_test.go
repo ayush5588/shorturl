@@ -9,7 +9,7 @@ func prepareMockRedis() {
 }
 
 func TestURLHandler(t *testing.T) {
-	tests := []struct {
+	_ = []struct {
 		name      string
 		callType  string
 		prepare   func()

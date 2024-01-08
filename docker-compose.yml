@@ -2,10 +2,10 @@ version: "3"
 
 services:
   server:
-    image: ayush5588/shorturl:0.0.6
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    # image: ayush5588/shorturl:0.0.6
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: shorturl-server
     ports:
       - "8080:8080"

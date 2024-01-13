@@ -35,7 +35,12 @@ func IsValidURL(logger *zap.SugaredLogger, rawURL string) bool {
 	if err != nil {
 		logger.Errorw("error in parsing given url", "err", err)
 	}
-	return (err == nil || u.Scheme == "" || u.Host == "")
+
+	if err != nil || u.Scheme == "" || u.Host == "" {
+		return false
+	}
+
+	return true
 
 }
 
